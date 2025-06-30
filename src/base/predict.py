@@ -1,14 +1,15 @@
 # -*- coding: UTF-8 -*-
 import logging
-from typing import Tuple, Dict, Any
+from typing import Any
+from typing import Dict
+from typing import Tuple
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from scipy.optimize import minimize_scalar
 from tqdm import tqdm
 
 from src.config import settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -70,12 +71,7 @@ def _find_optimal_mixture(data: pd.Series, endmembers_df: pd.DataFrame) -> Tuple
         - predicted_mixture (dict): A dictionary of the predicted parameter values.
     """
     # We use a bounded optimization method as a1 must be between 0 and 1.
-    result = minimize_scalar(
-        _calculate_ssr,
-        bounds=(0, 1),
-        args=(data, endmembers_df),
-        method="bounded"
-    )
+    result = minimize_scalar(_calculate_ssr, bounds=(0, 1), args=(data, endmembers_df), method="bounded")
 
     a1_optimal = result.x
     a2_optimal = 1.0 - a1_optimal
@@ -93,7 +89,7 @@ def _find_optimal_mixture(data: pd.Series, endmembers_df: pd.DataFrame) -> Tuple
 def main():
     import coloredlogs
 
-    coloredlogs.install(level='INFO', fmt='%(asctime)s %(levelname)s %(message)s')
+    coloredlogs.install(level="INFO", fmt="%(asctime)s %(levelname)s %(message)s")
 
     logger.info("Starting endmember prediction processing")
 
@@ -110,7 +106,9 @@ def main():
     _df = pd.read_excel(_path, sheet_name=1)
 
     if len(_df.columns[1:]) != len(_endmembers.columns[1:]):
-        logger.error(f"Number of parameters in the file {_path} doesn't match the number of parameters in the endmembers.")
+        logger.error(
+            f"Number of parameters in the file {_path} doesn't match the number of parameters in the endmembers."
+        )
         return
 
     results = []
