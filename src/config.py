@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
-import os
 import logging
+import os
+from pathlib import Path
 
 from dotenv import load_dotenv
-from pathlib import Path
 
 from src.constants import PROJECT_ROOT
 
-
 logger = logging.getLogger(__name__)
+
 
 class Settings:
     def __init__(self):
@@ -45,8 +45,8 @@ class Settings:
         if not self.INPUT_PATH.exists():
             raise ValueError(f"INPUT_PATH not set in environment variables: {self.INPUT_PATH}")
 
-        if not (self.OUTPUT_PATH / 'data').exists():
-            (self.OUTPUT_PATH / 'data').mkdir(parents=True, exist_ok=True)
+        if not (self.OUTPUT_PATH / "data").exists():
+            (self.OUTPUT_PATH / "data").mkdir(parents=True, exist_ok=True)
 
         if not (self.OUTPUT_PATH / "plots").exists():
             (self.OUTPUT_PATH / "plots").mkdir(parents=True, exist_ok=True)
