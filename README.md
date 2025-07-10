@@ -3,8 +3,10 @@
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**SPx** is a tool for processing spectral data (including but not limited to Near-Infrared (NIR)), 
+**SPx** is a tool for processing spectral data (including but not limited to Near-Infrared (NIR)),
 extracting features, generating visualizations and statistics, and applying linear spectral unmixing (LSUMx) to retrieve smectite content from measured NIR spectra.
+
+The spectrum processing code (main) was adapted from [Cardoso-Fernandes et al. (2021)](http://doi.org/10.5281/zenodo.4575375), and the prediction and unmixing code was created based on this study [Gread et al. (2025)](https://doi.org/10.1016/j.clay.2025.107748).
 
 ## 📋 Table of Contents
 
@@ -30,7 +32,7 @@ extracting features, generating visualizations and statistics, and applying line
 ## 📦 Requirements
 
 - Python 3.10 or higher
-- UV package manager
+- pip (Python package installer)
 - Git
 
 ## 💻 Installing Git
@@ -101,14 +103,14 @@ Before you can clone the repository, you need to have Git installed on your syst
    cd SPx
    ```
 
-2. **Install UV package manager**
+2. **Install pip (if not already installed)**
 
-   Follow the installation instructions at [UV Documentation](https://docs.astral.sh/uv/getting-started/installation/).
+   Follow the installation instructions at [pip Documentation](https://pip.pypa.io/en/stable/installation/#installation).
 
 3. **Create a virtual environment**
 
    ```bash
-   uv venv .venv
+   python -m venv .venv
    ```
 
 4. **Activate the virtual environment**
@@ -126,7 +128,7 @@ Before you can clone the repository, you need to have Git installed on your syst
 5. **Install dependencies**
 
    ```bash
-   uv sync
+   pip install .
    ```
 
 ## ⚙️ Configuration
@@ -218,7 +220,11 @@ python -m src.base.predict
 
 ## 🫶 Support
 
-This project No. 3007/01/01 has received funding from the **European Union´s Horizon 2020 research and innovation programme** under the *Marie Skłodowska-Curie grant agreement No. 945478*.
+This project was supported through several sources:
+- Project No. 3007/01/01 that received funding from the **European Union´s Horizon 2020 research and innovation programme** under the *Marie Skłodowska-Curie grant agreement No. 945478*.
+- APVV-20-0175
+- UK/3062/2024
+- UK/1025/2025.
 
 ## 📄 License
 

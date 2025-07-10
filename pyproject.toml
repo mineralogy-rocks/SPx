@@ -1,16 +1,18 @@
 [project]
-name = "nir-parser"
+name = "SPx"
 version = "1"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "coloredlogs>=15.0.1",
     "dotenv>=0.9.9",
     "matplotlib>=3.10.3",
     "openpyxl>=3.1.5",
     "pandas>=2.3.0",
+    "pre-commit>=4.2.0",
     "pysptools>=0.15.0",
     "ruff>=0.11.10",
     "scipy==1.13.1",
+    "scipy-stubs>=1.15.3.0",
     "tqdm>=4.67.1",
 ]
 
