@@ -15,11 +15,14 @@ import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
+from tkinter import messagebox
 from tkinter import scrolledtext
 from tkinter import ttk
 
-from src.config import settings
+import pandas as pd
 
+from src import choices
+from src.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +44,8 @@ class SPxApp:
 		self.root.minsize(600, 450)
 
 		self.log_queue = queue.Queue()
+		self._thresholds = [[name, lo, hi] for name, (lo, hi) in choices.THRESHOLDS]
+		self._endmembers_df = pd.DataFrame(choices.ENDMEMBERS)
 		self._setup_logging()
 		self._build_ui()
 		self._poll_log_queue()
@@ -78,6 +83,13 @@ class SPxApp:
 		ttk.Label(folders_frame, text="Output folder:").pack(side=tk.LEFT)
 		self.output_var = tk.StringVar(value="output")
 		ttk.Entry(folders_frame, textvariable=self.output_var, width=14).pack(side=tk.LEFT, padx=(4, 0))
+
+		# Edit buttons for thresholds and endmembers
+		edit_frame = ttk.Frame(main)
+		edit_frame.pack(fill=tk.X, pady=(0, 8))
+
+		ttk.Button(edit_frame, text="Edit Thresholds", command=self._open_thresholds_dialog).pack(side=tk.LEFT, padx=(0, 6))
+		ttk.Button(edit_frame, text="Edit Endmembers", command=self._open_endmembers_dialog).pack(side=tk.LEFT)
 
 		# Action buttons
 		btn_frame = ttk.Frame(main)
@@ -224,10 +236,12 @@ class SPxApp:
 		self._set_running(True)
 		self.status_var.set("Processing spectra...")
 
+		thresholds = [(n, (lo, hi)) for n, lo, hi in self._thresholds]
+
 		def task():
 			try:
 				from src.base.main import run_pipeline
-				run_pipeline(show_plots=False)
+				run_pipeline(show_plots=False, thresholds=thresholds)
 				self.root.after(0, self._on_task_done, "Processing completed successfully.")
 			except Exception as e:
 				self.root.after(0, self._on_task_done, f"Processing failed: {e}")
@@ -241,10 +255,12 @@ class SPxApp:
 		self._set_running(True)
 		self.status_var.set("Running unmixing...")
 
+		endmembers_df = self._endmembers_df.copy() if not self._endmembers_df.empty else None
+
 		def task():
 			try:
 				from src.base.predict import run_prediction
-				run_prediction()
+				run_prediction(endmembers_df=endmembers_df)
 				self.root.after(0, self._on_task_done, "Unmixing completed successfully.")
 			except Exception as e:
 				self.root.after(0, self._on_task_done, f"Unmixing failed: {e}")
@@ -282,6 +298,241 @@ class SPxApp:
 			except queue.Empty:
 				break
 		self.root.after(100, self._poll_log_queue)
+
+	def _open_thresholds_dialog(self):
+		ThresholdsDialog(self.root, self)
+
+	def _open_endmembers_dialog(self):
+		EndmembersDialog(self.root, self)
+
+
+class ThresholdsDialog(tk.Toplevel):
+	def __init__(self, parent, app):
+		super().__init__(parent)
+		self.app = app
+		self.title("Edit Thresholds")
+		self.geometry("480x400")
+		self.resizable(True, True)
+		self.grab_set()
+
+		self._data = [row[:] for row in app._thresholds]
+		self._selected_idx = None
+
+		self._build_ui()
+		self._refresh_tree()
+
+	def _build_ui(self):
+		# Treeview
+		tree_frame = ttk.Frame(self)
+		tree_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=(8, 4))
+
+		self.tree = ttk.Treeview(tree_frame, columns=("min", "max"), selectmode="browse")
+		self.tree.heading("#0", text="Name", anchor=tk.W)
+		self.tree.heading("min", text="Min (nm)", anchor=tk.E)
+		self.tree.heading("max", text="Max (nm)", anchor=tk.E)
+		self.tree.column("#0", width=160)
+		self.tree.column("min", width=90, anchor=tk.E)
+		self.tree.column("max", width=90, anchor=tk.E)
+
+		sb = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.tree.yview)
+		self.tree.configure(yscrollcommand=sb.set)
+		self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+		sb.pack(side=tk.RIGHT, fill=tk.Y)
+		self.tree.bind("<<TreeviewSelect>>", self._on_select)
+
+		# Edit / Add form
+		form_frame = ttk.LabelFrame(self, text="Add / Edit Row", padding=6)
+		form_frame.pack(fill=tk.X, padx=8, pady=4)
+
+		ttk.Label(form_frame, text="Name:").grid(row=0, column=0, sticky=tk.W, padx=(0, 4))
+		self._name_var = tk.StringVar()
+		ttk.Entry(form_frame, textvariable=self._name_var, width=14).grid(row=0, column=1, padx=(0, 8))
+
+		ttk.Label(form_frame, text="Min (nm):").grid(row=0, column=2, sticky=tk.W, padx=(0, 4))
+		self._min_var = tk.StringVar()
+		ttk.Entry(form_frame, textvariable=self._min_var, width=8).grid(row=0, column=3, padx=(0, 8))
+
+		ttk.Label(form_frame, text="Max (nm):").grid(row=0, column=4, sticky=tk.W, padx=(0, 4))
+		self._max_var = tk.StringVar()
+		ttk.Entry(form_frame, textvariable=self._max_var, width=8).grid(row=0, column=5, padx=(0, 8))
+
+		form_btns = ttk.Frame(form_frame)
+		form_btns.grid(row=1, column=0, columnspan=6, sticky=tk.W, pady=(6, 0))
+		ttk.Button(form_btns, text="Add New", command=self._add_row).pack(side=tk.LEFT, padx=(0, 6))
+		ttk.Button(form_btns, text="Update Selected", command=self._update_selected).pack(side=tk.LEFT)
+
+		# Bottom buttons
+		btn_frame = ttk.Frame(self)
+		btn_frame.pack(fill=tk.X, padx=8, pady=(4, 8))
+
+		ttk.Button(btn_frame, text="Remove Selected", command=self._remove_selected).pack(side=tk.LEFT)
+		ttk.Button(btn_frame, text="Cancel", command=self.destroy).pack(side=tk.RIGHT)
+		ttk.Button(btn_frame, text="Save", command=self._save).pack(side=tk.RIGHT, padx=(0, 6))
+
+	def _refresh_tree(self):
+		self.tree.delete(*self.tree.get_children())
+		for row in self._data:
+			self.tree.insert("", tk.END, text=row[0], values=(row[1], row[2]))
+
+	def _on_select(self, _event=None):
+		item = self.tree.focus()
+		if not item:
+			return
+		self._selected_idx = self.tree.index(item)
+		row = self._data[self._selected_idx]
+		self._name_var.set(row[0])
+		self._min_var.set(row[1])
+		self._max_var.set(row[2])
+
+	def _parse_form(self):
+		name = self._name_var.get().strip()
+		if not name:
+			messagebox.showerror("Invalid input", "Name cannot be empty.", parent=self)
+			return None
+		try:
+			lo = float(self._min_var.get())
+			hi = float(self._max_var.get())
+		except ValueError:
+			messagebox.showerror("Invalid input", "Min and Max must be numbers.", parent=self)
+			return None
+		return [name, lo, hi]
+
+	def _add_row(self):
+		row = self._parse_form()
+		if row is None:
+			return
+		self._data.append(row)
+		self._refresh_tree()
+		self._name_var.set("")
+		self._min_var.set("")
+		self._max_var.set("")
+
+	def _update_selected(self):
+		if self._selected_idx is None:
+			messagebox.showinfo("No selection", "Select a row in the list first.", parent=self)
+			return
+		row = self._parse_form()
+		if row is None:
+			return
+		self._data[self._selected_idx] = row
+		self._refresh_tree()
+
+	def _remove_selected(self):
+		item = self.tree.focus()
+		if not item:
+			return
+		idx = self.tree.index(item)
+		del self._data[idx]
+		self._selected_idx = None
+		self._refresh_tree()
+
+	def _save(self):
+		self.app._thresholds = [row[:] for row in self._data]
+		self.destroy()
+
+
+class EndmembersDialog(tk.Toplevel):
+	def __init__(self, parent, app):
+		super().__init__(parent)
+		self.app = app
+		self.title("Edit Endmembers")
+		self.geometry("660x420")
+		self.resizable(True, True)
+		self.grab_set()
+
+		self._df = app._endmembers_df.copy()
+		self._selected_idx = None
+		# Use safe integer IDs for Treeview columns to avoid issues with
+		# special chars / spaces in column names (e.g. "Total Slope", "TAr/TFWH")
+		self._col_ids = [f"c{i}" for i in range(len(self._df.columns))]
+
+		self._build_ui()
+		self._refresh_tree()
+
+	def _build_ui(self):
+		cols = list(self._df.columns)
+		name_col = cols[0] if cols else "Name"
+		value_col_ids = self._col_ids[1:]
+		value_col_names = cols[1:]
+
+		# Treeview
+		tree_frame = ttk.Frame(self)
+		tree_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=(8, 4))
+
+		self.tree = ttk.Treeview(tree_frame, columns=value_col_ids, selectmode="browse")
+		self.tree.heading("#0", text=name_col, anchor=tk.W)
+		self.tree.column("#0", width=110)
+		for cid, cname in zip(value_col_ids, value_col_names):
+			self.tree.heading(cid, text=cname, anchor=tk.E)
+			self.tree.column(cid, width=90, anchor=tk.E)
+
+		sb = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.tree.yview)
+		self.tree.configure(yscrollcommand=sb.set)
+		self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+		sb.pack(side=tk.RIGHT, fill=tk.Y)
+		self.tree.bind("<<TreeviewSelect>>", self._on_select)
+
+		# Edit form — one Label+Entry per column, laid out in two rows if many cols
+		edit_frame = ttk.LabelFrame(self, text="Edit Selected Row", padding=6)
+		edit_frame.pack(fill=tk.X, padx=8, pady=4)
+
+		self._entry_vars = {}
+		for i, col in enumerate(cols):
+			ttk.Label(edit_frame, text=col + ":").grid(row=i // 3, column=(i % 3) * 2, sticky=tk.W, padx=(0, 2), pady=2)
+			var = tk.StringVar()
+			self._entry_vars[col] = var
+			ttk.Entry(edit_frame, textvariable=var, width=12).grid(row=i // 3, column=(i % 3) * 2 + 1, padx=(0, 10), pady=2)
+
+		num_rows = (len(cols) - 1) // 3 + 1
+		ttk.Button(edit_frame, text="Update Row", command=self._update_row).grid(
+			row=num_rows, column=0, columnspan=6, sticky=tk.W, pady=(6, 0)
+		)
+
+		# Bottom buttons
+		btn_frame = ttk.Frame(self)
+		btn_frame.pack(fill=tk.X, padx=8, pady=(4, 8))
+
+		ttk.Button(btn_frame, text="Reset to Defaults", command=self._reset_defaults).pack(side=tk.LEFT)
+		ttk.Button(btn_frame, text="Cancel", command=self.destroy).pack(side=tk.RIGHT)
+		ttk.Button(btn_frame, text="Save", command=self._save).pack(side=tk.RIGHT, padx=(0, 6))
+
+	def _refresh_tree(self):
+		self.tree.delete(*self.tree.get_children())
+		cols = list(self._df.columns)
+		value_cols = cols[1:]
+		for _, row in self._df.iterrows():
+			self.tree.insert("", tk.END, text=str(row.iloc[0]), values=[str(row[c]) for c in value_cols])
+
+	def _on_select(self, _event=None):
+		item = self.tree.focus()
+		if not item:
+			return
+		self._selected_idx = self.tree.index(item)
+		row = self._df.iloc[self._selected_idx]
+		for col, var in self._entry_vars.items():
+			var.set(str(row[col]))
+
+	def _update_row(self):
+		if self._selected_idx is None:
+			messagebox.showinfo("No selection", "Select a row first.", parent=self)
+			return
+		for col, var in self._entry_vars.items():
+			val = var.get()
+			try:
+				self._df.at[self._df.index[self._selected_idx], col] = float(val) if col != self._df.columns[0] else val
+			except ValueError:
+				messagebox.showerror("Invalid value", f"Could not convert '{val}' for column '{col}'.", parent=self)
+				return
+		self._refresh_tree()
+
+	def _reset_defaults(self):
+		self._df = pd.DataFrame(choices.ENDMEMBERS)
+		self._selected_idx = None
+		self._refresh_tree()
+
+	def _save(self):
+		self.app._endmembers_df = self._df.copy()
+		self.destroy()
 
 
 def run():

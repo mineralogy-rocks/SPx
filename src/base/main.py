@@ -11,7 +11,6 @@ from tqdm import tqdm
 from pysptools.spectro import FeaturesConvexHullQuotient, SpectrumConvexHullQuotient
 
 from src.config import settings
-from src.choices import THRESHOLDS
 
 logger = logging.getLogger(__name__)
 
@@ -198,7 +197,11 @@ def _get_files(path):
     return _files
 
 
-def generate_spectra():
+def generate_spectra(thresholds=None):
+    if thresholds is None:
+        from src.choices import THRESHOLDS
+        thresholds = THRESHOLDS
+
     _path = settings.INPUT_PATH
     _filenames = [f for f in _get_files(_path) if f.endswith('.csv') or f.endswith('.CSV')]
 
@@ -209,7 +212,7 @@ def generate_spectra():
         _df = _df.apply(pd.to_numeric, errors='coerce')
         _df = _df.dropna()
 
-        for _threshold, _limits in THRESHOLDS:
+        for _threshold, _limits in thresholds:
             _peak_filename = f'{_filename.split(".")[0]}-{_threshold}'
             _df_peak = _df.loc[(_df['wavelength'] >= _limits[0]) & (_df['wavelength'] <= _limits[1])]
             _df_peak = _df_peak.reset_index(drop=True)
@@ -232,11 +235,11 @@ def _cleanup(path):
         logger.warning(f"Path {path} does not exist. Cannot delete.")
 
 
-def run_pipeline(show_plots=True):
+def run_pipeline(show_plots=True, thresholds=None):
     logger.info("Starting NIR spectra processing")
     _cleanup(settings.OUTPUT_PATH / 'data')
     _cleanup(settings.OUTPUT_PATH / 'plots')
-    generate_spectra()
+    generate_spectra(thresholds=thresholds)
     process_spectra(show_plots=show_plots)
     logger.info("Processing completed successfully")
 

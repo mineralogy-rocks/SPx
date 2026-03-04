@@ -90,10 +90,13 @@ def _find_optimal_mixture(data: pd.Series, endmembers_df: pd.DataFrame) -> Tuple
     return a1_optimal, a2_optimal, min_ssr, predicted_mixture
 
 
-def run_prediction():
+def run_prediction(endmembers_df=None):
     logger.info("Starting endmember prediction processing")
 
-    _endmembers = pd.read_excel(settings.ENDMEMBERS_PATH)
+    if endmembers_df is not None:
+        _endmembers = endmembers_df.copy()
+    else:
+        _endmembers = pd.read_excel(settings.ENDMEMBERS_PATH)
     if len(_endmembers) > 2:
         raise ValueError(f"Too many endmembers in the file. Should be only 2, got {len(_endmembers)}.")
 
