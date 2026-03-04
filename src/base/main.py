@@ -118,6 +118,7 @@ def process_spectra(show_plots=True):
 
             _data = b_stats_keep.loc[:]
             _data['filename'] = key
+            _data['peak'] = key.split('-peak-')[-1]
             _data["hx_1"] = _data["hx"].apply(lambda x: x[0] if x is not None else None)
             _data["hx_2"] = _data["hx"].apply(lambda x: x[1] if x is not None else None)
             _data["hy_1"] = _data["hy"].apply(lambda x: x[0] if x is not None else None)
@@ -136,8 +137,8 @@ def process_spectra(show_plots=True):
             _data['FWHM_assymetry'] = _data['FWHM_left_width'] / _data['FWHM_right_width']
 
             _data['D'] = 1 - _data['abs_depth']
-            _data['E'] = 1 - _data['FW'] / _data['D']
-            _data['E*'] = 1 - _data['FWHM_delta'] / _data['D']
+            _data['E'] = _data['FW'] / _data['D']
+            _data['E*'] = _data['FWHM_delta'] / _data['D']
 
             _data.drop(columns=['seq', 'id', 'state', 'spectrum', 'wvl', 'crs', 'hx', 'hy', 'FWHM_x'], inplace=True)
             _full_data = pd.concat([_full_data, _data], axis=0)
@@ -146,8 +147,11 @@ def process_spectra(show_plots=True):
 
     # TODO: place further calculations here
 
-    _full_data.set_index('filename', inplace=True)
-    _full_data.to_excel(os.path.join(_data_path, 'results.xlsx'))
+    cols = _full_data.columns.tolist()
+    cols.insert(0, cols.pop(cols.index('peak')))
+    cols.insert(1, cols.pop(cols.index('filename')))
+    _full_data = _full_data[cols]
+    _full_data.to_excel(os.path.join(_data_path, 'results.xlsx'), index=False)
 
     plt.rcParams.update(plt.rcParamsDefault)
     for key, value in tqdm(spectra.items(), desc="Exporting continuum removed spectra", unit="spectrum"):
