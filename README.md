@@ -45,14 +45,19 @@ Click **Browse...** and choose a folder that contains your input data. This fold
 
 The default folder names are `input` and `output`. You can change them if your project uses different names.
 
-### Step 3: Run Processing
+### Step 3: (Optional) Adjust Thresholds and Endmembers
+
+- Click **Edit Thresholds** to change the wavelength ranges used for spectral peak extraction
+- Click **Edit Endmembers** to modify the reference endmember values used for unmixing
+
+### Step 4: Run Processing
 
 - Click **Process Spectra** to run the full spectral processing pipeline (feature extraction, statistics, visualizations)
 - Click **Run Unmixing** to apply linear spectral unmixing using your endmember data
 
 A progress bar will show that processing is running, and the **Log** tab displays real-time messages about what the application is doing.
 
-### Step 4: Browse Results
+### Step 5: Browse Results
 
 When processing finishes, the app automatically switches to the **Output Files** tab. This built-in file explorer shows your results organized in two folders:
 
@@ -71,23 +76,28 @@ Use the **Refresh** button in the Output Files tab to reload the file list if yo
 
 Place your spectral CSV files in the `input` folder inside your project directory. The input folder cannot be empty.
 
-### Endmembers
-
-The file `data/endmembers.xlsx` (bundled with the application) contains reference endmember data for spectral unmixing. You can modify this file to add, remove, or update entries for your specific analysis.
-
 ### Customizing Thresholds
 
-Spectral peak thresholds can be adjusted by editing `src/choices.py`:
+Click **Edit Thresholds** in the main window to adjust spectral peak wavelength ranges without editing any files. Changes apply immediately to the next **Process Spectra** run.
 
-```python
-THRESHOLDS = (
-    ('peak-1', (5500, 8000)),
-    ('peak-2', (4600, 5540)),
-    ('peak-3', (4310, 4788)),
-)
-```
+Default thresholds:
 
-Each threshold is a name and a wavelength range in nanometers.
+| Name   | Min (nm) | Max (nm) |
+|--------|----------|----------|
+| peak-1 | 5500     | 8000     |
+| peak-2 | 4600     | 5540     |
+| peak-3 | 4310     | 4788     |
+
+### Endmembers
+
+Click **Edit Endmembers** to view and modify the reference endmember values used for spectral unmixing. Changes apply to the next **Run Unmixing** run. Use **Reset to Defaults** to restore the original values at any time.
+
+Default endmembers:
+
+| Name      | D        | 2D       | 3D       | TAr/TFWH | Total Slope |
+|-----------|----------|----------|----------|----------|-------------|
+| E_20      | 0.392978 | 0.535334 | 0.265502 | 0.467588 | 4.516e-05   |
+| EQ_95_Ave | 0.059019 | 0.109567 | 0.034372 | 0.095481 | 8.979e-06   |
 
 ### Prediction Requirements
 
