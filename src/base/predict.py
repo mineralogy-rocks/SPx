@@ -90,28 +90,24 @@ def _find_optimal_mixture(data: pd.Series, endmembers_df: pd.DataFrame) -> Tuple
     return a1_optimal, a2_optimal, min_ssr, predicted_mixture
 
 
-def main():
-    import coloredlogs
-
-    coloredlogs.install(level='INFO', fmt='%(asctime)s %(levelname)s %(message)s')
-
+def run_prediction():
     logger.info("Starting endmember prediction processing")
 
     _endmembers = pd.read_excel(settings.ENDMEMBERS_PATH)
     if len(_endmembers) > 2:
-        logger.error(f"Too many endmembers in the file: {_endmembers}. Should be only 2!")
-        return
+        raise ValueError(f"Too many endmembers in the file. Should be only 2, got {len(_endmembers)}.")
 
     _path = settings.OUTPUT_PATH / "data" / "results.xlsx"
 
     if len(pd.ExcelFile(_path).sheet_names) < 2:
-        logger.error(f"File {_path} doesn't have a second sheet necessary for calculations.")
-        return
+        raise ValueError(f"File {_path} doesn't have a second sheet necessary for calculations.")
+
     _df = pd.read_excel(_path, sheet_name=1)
 
     if len(_df.columns[1:]) != len(_endmembers.columns[1:]):
-        logger.error(f"Number of parameters in the file {_path} doesn't match the number of parameters in the endmembers.")
-        return
+        raise ValueError(
+            f"Number of parameters in {_path} doesn't match the number of parameters in the endmembers."
+        )
 
     results = []
     for index, row in tqdm(_df.iterrows(), desc="Processing rows", unit="row", total=len(_df)):
@@ -134,7 +130,24 @@ def main():
     results = pd.DataFrame(results)
     results.to_excel(settings.OUTPUT_PATH / "data" / "results_predicted.xlsx", index=False)
 
-    logger.info("Processing completed successfully")
+    logger.info("Prediction completed successfully")
+
+
+def main():
+    import coloredlogs
+
+    if not settings.is_configured:
+        settings.configure_from_env()
+
+    coloredlogs.install(level='INFO', fmt='%(asctime)s %(levelname)s %(message)s')
+
+    try:
+        run_prediction()
+    except Exception as e:
+        logger.error(f"An error occurred during prediction: {str(e)}", exc_info=True)
+        return 1
+
+    return 0
 
 
 if __name__ == "__main__":

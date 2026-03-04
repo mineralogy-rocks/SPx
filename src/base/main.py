@@ -232,24 +232,30 @@ def _cleanup(path):
         logger.warning(f"Path {path} does not exist. Cannot delete.")
 
 
+def run_pipeline(show_plots=True):
+    logger.info("Starting NIR spectra processing")
+    _cleanup(settings.OUTPUT_PATH / 'data')
+    _cleanup(settings.OUTPUT_PATH / 'plots')
+    generate_spectra()
+    process_spectra(show_plots=show_plots)
+    logger.info("Processing completed successfully")
+
+
 def main():
     import coloredlogs
 
     parser = argparse.ArgumentParser(description='Process NIR spectra files.')
-    parser.add_argument('--no-plots', action='store_true', help='Do not show plots during processing', default=True)
+    parser.add_argument('--no-plots', action='store_true', help='Do not show plots during processing')
 
     args = parser.parse_args()
 
+    if not settings.is_configured:
+        settings.configure_from_env()
+
     coloredlogs.install(level='INFO', fmt='%(asctime)s %(levelname)s %(message)s')
 
-    logger.info("Starting NIR spectra processing")
-
     try:
-        _cleanup(settings.OUTPUT_PATH / 'data')
-        _cleanup(settings.OUTPUT_PATH / 'plots')
-        generate_spectra()
-        process_spectra(show_plots=not args.no_plots)
-        logger.info("Processing completed successfully")
+        run_pipeline(show_plots=not args.no_plots)
     except Exception as e:
         logger.error(f"An error occurred during processing: {str(e)}", exc_info=True)
         return 1

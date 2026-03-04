@@ -1,0 +1,96 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install ".[desktop]"
+
+      - name: Build with PyInstaller
+        run: pyinstaller SPx.spec
+
+      - name: Zip artifact
+        run: cd dist && zip -r ../SPx-macos.zip SPx.app
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SPx-macos
+          path: SPx-macos.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install ".[desktop]"
+
+      - name: Build with PyInstaller
+        run: pyinstaller SPx.spec
+
+      - name: Zip artifact
+        run: Compress-Archive -Path dist/SPx -DestinationPath SPx-windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SPx-windows
+          path: SPx-windows.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install ".[desktop]"
+
+      - name: Build with PyInstaller
+        run: pyinstaller SPx.spec
+
+      - name: Zip artifact
+        run: cd dist && zip -r ../SPx-linux.zip SPx
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SPx-linux
+          path: SPx-linux.zip
+
+  release:
+    needs: [build-macos, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            SPx-macos.zip
+            SPx-windows.zip
+            SPx-linux.zip
