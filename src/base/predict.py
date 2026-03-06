@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import logging
+from pathlib import Path
 from typing import Tuple, Dict, Any
 
 import pandas as pd
@@ -90,13 +91,11 @@ def _find_optimal_mixture(data: pd.Series, endmembers_df: pd.DataFrame) -> Tuple
     return a1_optimal, a2_optimal, min_ssr, predicted_mixture
 
 
-def run_prediction(endmembers_df=None):
+def run_prediction(endmembers_path=None):
     logger.info("Starting endmember prediction processing")
 
-    if endmembers_df is not None:
-        _endmembers = endmembers_df.copy()
-    else:
-        _endmembers = pd.read_excel(settings.ENDMEMBERS_PATH)
+    path = Path(endmembers_path) if endmembers_path else settings.ENDMEMBERS_PATH
+    _endmembers = pd.read_excel(path)
     if len(_endmembers) > 2:
         raise ValueError(f"Too many endmembers in the file. Should be only 2, got {len(_endmembers)}.")
 

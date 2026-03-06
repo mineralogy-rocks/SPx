@@ -25,6 +25,10 @@ dev = [
 desktop = [
     "pyinstaller>=6.0",
 ]
+notebook = [
+    "jupyter>=1.0.0",
+    "ipykernel>=6.0",
+]
 
 [project.scripts]
 spx-gui = "src.gui:run"

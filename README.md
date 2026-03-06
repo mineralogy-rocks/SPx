@@ -45,10 +45,10 @@ Click **Browse...** and choose a folder that contains your input data. This fold
 
 The default folder names are `input` and `output`. You can change them if your project uses different names.
 
-### Step 3: (Optional) Adjust Thresholds and Endmembers
+### Step 3: (Optional) Adjust Thresholds and Endmembers File
 
 - Click **Edit Thresholds** to change the wavelength ranges used for spectral peak extraction
-- Click **Edit Endmembers** to modify the reference endmember values used for unmixing
+- In the **Endmembers File** field, the default path (`data/endmembers.xlsx`) is pre-filled. Click **Browse...** to select a different `.xlsx` file
 
 ### Step 4: Run Processing
 
@@ -90,14 +90,12 @@ Default thresholds:
 
 ### Endmembers
 
-Click **Edit Endmembers** to view and modify the reference endmember values used for spectral unmixing. Changes apply to the next **Run Unmixing** run. Use **Reset to Defaults** to restore the original values at any time.
+The **Endmembers File** field in the main window points to the `.xlsx` file containing your reference endmember data. The default path is `data/endmembers.xlsx` inside your project directory. Click **Browse...** to select a different file.
 
-Default endmembers:
-
-| Name      | D        | 2D       | 3D       | TAr/TFWH | Total Slope |
-|-----------|----------|----------|----------|----------|-------------|
-| E_20      | 0.392978 | 0.535334 | 0.265502 | 0.467588 | 4.516e-05   |
-| EQ_95_Ave | 0.059019 | 0.109567 | 0.034372 | 0.095481 | 8.979e-06   |
+The endmembers file must have:
+- First column: endmember name/ID
+- Remaining columns: spectral parameters (e.g. `D`, `2D`, `3D`, `TAr/TFWH`, `Total Slope`)
+- Exactly 2 rows of endmember data
 
 ### Prediction Requirements
 
