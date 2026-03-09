@@ -1,6 +1,9 @@
 {
 	"name": "SPx",
-	"image": "mcr.microsoft.com/devcontainers/python:3.12",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": ".."
+	},
 	"postCreateCommand": "pip install -e '.[notebook]'",
 	"customizations": {
 		"vscode": {
