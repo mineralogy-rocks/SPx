@@ -1,0 +1,10 @@
+{
+	"name": "SPx",
+	"image": "mcr.microsoft.com/devcontainers/python:3.12",
+	"postCreateCommand": "pip install -e '.[notebook]'",
+	"customizations": {
+		"vscode": {
+			"extensions": ["ms-toolsai.jupyter", "ms-python.python"]
+		}
+	}
+}
