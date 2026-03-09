@@ -16,6 +16,7 @@ a = Analysis(
     binaries=[],
     datas=[
         (str(ROOT / "data" / "endmembers.xlsx"), "data"),
+        (str(ROOT / "data" / "samples"), "data/samples"),
     ],
     hiddenimports=[
         "scipy",

@@ -2,12 +2,19 @@
 import multiprocessing
 multiprocessing.freeze_support()
 
+import os
+import sys
+
+if sys.stdout is None:
+	sys.stdout = open(os.devnull, "w")
+if sys.stderr is None:
+	sys.stderr = open(os.devnull, "w")
+
 import matplotlib
 matplotlib.use("Agg")
 
 import datetime
 import logging
-import os
 import platform
 import queue
 import subprocess
@@ -62,7 +69,11 @@ class SPxApp:
 		dir_frame = ttk.LabelFrame(main, text="Project Directory", padding=8)
 		dir_frame.pack(fill=tk.X, pady=(0, 8))
 
-		self.dir_var = tk.StringVar()
+		if getattr(sys, "frozen", False):
+			default_dir = str(Path(sys._MEIPASS) / "data")
+		else:
+			default_dir = str(Path(__file__).resolve().parent.parent / "data")
+		self.dir_var = tk.StringVar(value=default_dir)
 		dir_entry = ttk.Entry(dir_frame, textvariable=self.dir_var)
 		dir_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 6))
 
@@ -74,7 +85,7 @@ class SPxApp:
 		folders_frame.pack(fill=tk.X, pady=(0, 8))
 
 		ttk.Label(folders_frame, text="Input folder:").pack(side=tk.LEFT)
-		self.input_var = tk.StringVar(value="input")
+		self.input_var = tk.StringVar(value="samples")
 		ttk.Entry(folders_frame, textvariable=self.input_var, width=14).pack(side=tk.LEFT, padx=(4, 12))
 
 		ttk.Label(folders_frame, text="Output folder:").pack(side=tk.LEFT)
