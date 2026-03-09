@@ -4,7 +4,7 @@
   <br />
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.10+-blue.svg" alt="Python 3.10+" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
-  <a href="https://codespaces.new/mineralogy-rocks/SPx?quickstart=1"><img src="https://github.com/codespaces/badge.svg" alt="Open in GitHub Codespaces" /></a>
+  <a href="https://colab.research.google.com/github/mineralogy-rocks/SPx/blob/main/notebook.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" /></a>
 </p>
 
 **SPx** is a tool for processing spectral data (including but not limited to Near-Infrared (NIR)),
@@ -24,7 +24,7 @@ The spectrum processing code (main) was adapted from [Cardoso-Fernandes et al. (
 
 ## 🌐 Try in Browser
 
-Click **Open in GitHub Codespaces** above to launch a ready-to-use environment — no installation needed. The notebook opens with bundled sample data and all dependencies pre-installed. Just open `notebook.ipynb` and run all cells.
+Click **Open in Colab** above to launch the notebook in Google Colab — no installation needed. The first cell automatically clones the repository and installs all dependencies. Just run all cells from top to bottom.
 
 ## 🚀 Getting Started
 
