@@ -50,6 +50,7 @@ class SPxApp:
 
 		self.log_queue = queue.Queue()
 		self._thresholds = [[name, lo, hi] for name, (lo, hi) in choices.THRESHOLDS]
+		self._axis_labels = {k: list(v) for k, v in choices.AXIS_LABELS.items()}
 		self._setup_logging()
 		self._build_ui()
 		self._poll_log_queue()
@@ -105,6 +106,7 @@ class SPxApp:
 		edit_frame.pack(fill=tk.X, pady=(0, 8))
 
 		ttk.Button(edit_frame, text="Edit Thresholds", command=self._open_thresholds_dialog).pack(side=tk.LEFT, padx=(0, 6))
+		ttk.Button(edit_frame, text="Edit Axis Labels", command=self._open_axis_labels_dialog).pack(side=tk.LEFT, padx=(0, 6))
 
 		# Action buttons
 		btn_frame = ttk.Frame(main)
@@ -256,7 +258,7 @@ class SPxApp:
 		def task():
 			try:
 				from src.base.main import run_pipeline
-				run_pipeline(show_plots=False, thresholds=thresholds)
+				run_pipeline(show_plots=False, thresholds=thresholds, axis_labels=self._axis_labels)
 				self.root.after(0, self._on_task_done, "Processing completed successfully.")
 			except Exception as e:
 				self.root.after(0, self._on_task_done, f"Processing failed: {e}")
@@ -324,6 +326,9 @@ class SPxApp:
 
 	def _open_thresholds_dialog(self):
 		ThresholdsDialog(self.root, self)
+
+	def _open_axis_labels_dialog(self):
+		AxisLabelsDialog(self.root, self)
 
 
 class ThresholdsDialog(tk.Toplevel):
@@ -448,6 +453,56 @@ class ThresholdsDialog(tk.Toplevel):
 
 	def _save(self):
 		self.app._thresholds = [row[:] for row in self._data]
+		self.destroy()
+
+
+class AxisLabelsDialog(tk.Toplevel):
+	def __init__(self, parent, app):
+		super().__init__(parent)
+		self.app = app
+		self.title("Edit Axis Labels")
+		self.geometry("480x220")
+		self.resizable(True, True)
+		self.grab_set()
+
+		self._axis_labels = {k: list(v) for k, v in app._axis_labels.items()}
+		self._build_ui()
+
+	def _build_ui(self):
+		# Original Spectra
+		orig_frame = ttk.LabelFrame(self, text="Original Spectra", padding=6)
+		orig_frame.pack(fill=tk.X, padx=8, pady=(8, 4))
+
+		ttk.Label(orig_frame, text="X-axis:").grid(row=0, column=0, sticky=tk.W, padx=(0, 4))
+		self._orig_x_var = tk.StringVar(value=self._axis_labels['original'][0])
+		ttk.Entry(orig_frame, textvariable=self._orig_x_var, width=30).grid(row=0, column=1, padx=(0, 12))
+		ttk.Label(orig_frame, text="Y-axis:").grid(row=0, column=2, sticky=tk.W, padx=(0, 4))
+		self._orig_y_var = tk.StringVar(value=self._axis_labels['original'][1])
+		ttk.Entry(orig_frame, textvariable=self._orig_y_var, width=30).grid(row=0, column=3)
+
+		# Continuum Removed
+		cr_frame = ttk.LabelFrame(self, text="Continuum Removed", padding=6)
+		cr_frame.pack(fill=tk.X, padx=8, pady=4)
+
+		ttk.Label(cr_frame, text="X-axis:").grid(row=0, column=0, sticky=tk.W, padx=(0, 4))
+		self._cr_x_var = tk.StringVar(value=self._axis_labels['continuum_removed'][0])
+		ttk.Entry(cr_frame, textvariable=self._cr_x_var, width=30).grid(row=0, column=1, padx=(0, 12))
+		ttk.Label(cr_frame, text="Y-axis:").grid(row=0, column=2, sticky=tk.W, padx=(0, 4))
+		self._cr_y_var = tk.StringVar(value=self._axis_labels['continuum_removed'][1])
+		ttk.Entry(cr_frame, textvariable=self._cr_y_var, width=30).grid(row=0, column=3)
+
+		# Buttons
+		btn_frame = ttk.Frame(self)
+		btn_frame.pack(fill=tk.X, padx=8, pady=(4, 8))
+
+		ttk.Button(btn_frame, text="Cancel", command=self.destroy).pack(side=tk.RIGHT)
+		ttk.Button(btn_frame, text="Save", command=self._save).pack(side=tk.RIGHT, padx=(0, 6))
+
+	def _save(self):
+		self.app._axis_labels = {
+			'original': [self._orig_x_var.get(), self._orig_y_var.get()],
+			'continuum_removed': [self._cr_x_var.get(), self._cr_y_var.get()],
+		}
 		self.destroy()
 
 

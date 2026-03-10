@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from pysptools.spectro import FeaturesConvexHullQuotient, SpectrumConvexHullQuotient
 
+from src import choices
 from src.config import settings
 
 logger = logging.getLogger(__name__)
@@ -23,13 +24,16 @@ def _save_fig(fig_id, tight_layout=True, fig_extension="png", resolution=300):
     plt.savefig(path, format=fig_extension, dpi=resolution)
 
 
-def process_spectra(show_plots=True):
+def process_spectra(show_plots=True, axis_labels=None):
     """
     Process spectral data files.
 
     Args:
         show_plots: Whether to show plots during processing
+        axis_labels: Dict with 'original' and 'continuum_removed' keys, each a list of [x_label, y_label]
     """
+    if axis_labels is None:
+        axis_labels = choices.AXIS_LABELS
     _data_path = settings.OUTPUT_PATH / 'data'
     _plots_path = settings.OUTPUT_PATH / 'plots'
 
@@ -60,9 +64,9 @@ def process_spectra(show_plots=True):
         plt.figure()
         ax = plt.gca()
         spectra[key].plot(kind='line',x='Wvl',y='Reflect. %',ax=ax)
-        plt.xlabel('Wavelength (nm)',fontsize=14)
+        plt.xlabel(axis_labels['original'][0], fontsize=14)
         plt.xticks(size=14)
-        plt.ylabel('Reflectance (%)',fontsize=14)
+        plt.ylabel(axis_labels['original'][1], fontsize=14)
         plt.yticks(size=14)
         plt.title(key, fontsize=16, pad=10)
         ax.get_legend().remove()
@@ -171,9 +175,9 @@ def process_spectra(show_plots=True):
             plt.figure()
             ax = plt.gca()
             cont_corr.plot(kind='line',color='g', x='Wvl',y='Reflectance', ax=ax)
-            plt.xlabel('Wavelength (nm)', fontsize=14)
+            plt.xlabel(axis_labels['continuum_removed'][0], fontsize=14)
             plt.xticks(size=14)
-            plt.ylabel('Continuum removed reflectance',fontsize=14)
+            plt.ylabel(axis_labels['continuum_removed'][1], fontsize=14)
             plt.yticks(size=14)
             plt.title(key,fontsize=16, pad=10)
             ax.get_legend().remove()
@@ -235,12 +239,12 @@ def _cleanup(path):
         logger.warning(f"Path {path} does not exist. Cannot delete.")
 
 
-def run_pipeline(show_plots=True, thresholds=None):
+def run_pipeline(show_plots=True, thresholds=None, axis_labels=None):
     logger.info("Starting NIR spectra processing")
     _cleanup(settings.OUTPUT_PATH / 'data')
     _cleanup(settings.OUTPUT_PATH / 'plots')
     generate_spectra(thresholds=thresholds)
-    process_spectra(show_plots=show_plots)
+    process_spectra(show_plots=show_plots, axis_labels=axis_labels)
     logger.info("Processing completed successfully")
 
 
