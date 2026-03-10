@@ -1,7 +1,11 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "SPx"
 version = "1"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "coloredlogs>=15.0.1",
     "matplotlib>=3.10.3",
