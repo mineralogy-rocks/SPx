@@ -14,6 +14,7 @@ The spectrum processing code (main) was adapted from [Cardoso-Fernandes et al. (
 ## 📋 Table of Contents
 
 - [Getting Started](#-getting-started)
+- [Cloud / Notebook](#️-cloud--notebook)
 - [Using the Application](#-using-the-application)
 - [Preparing Your Data](#-preparing-your-data)
 - [Development](#-development)
@@ -34,6 +35,15 @@ Download the latest version of SPx from the [GitHub Releases](https://github.com
 ### Launch
 
 Double-click `SPx.app` (macOS) or `SPx.exe` (Windows) to start the application.
+
+## ☁️ Cloud / Notebook
+
+Run SPx directly in Google Colab — no local setup required:
+
+| Notebook | Description | Link |
+|----------|-------------|------|
+| **Processing** | Read CSV spectral files, extract features, generate statistics and plots | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mineralogy-rocks/SPx/blob/main/notebooks/processing.ipynb) |
+| **Unmixing** | Apply linear spectral unmixing using reference endmembers | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mineralogy-rocks/SPx/blob/main/notebooks/unmixing.ipynb) |
 
 ## 📖 Using the Application
 
