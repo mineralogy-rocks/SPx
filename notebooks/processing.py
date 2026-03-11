@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.10"
+# requires-python = "==3.10.*"
 # dependencies = [
 #     "pysptools==0.15.0",
 #     "pandas==3.0.1",
