@@ -8,6 +8,7 @@
 #     "scipy-stubs>=1.15.3.0",
 #     "openpyxl",
 #     "tqdm==4.67.3",
+#     "tzdata==2025.2",
 #     "marimo",
 # ]
 # ///
