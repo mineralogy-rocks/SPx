@@ -4,7 +4,7 @@
 #     "pysptools>=0.15.0",
 #     "pandas>=2.3.0",
 #     "matplotlib==3.10.8",
-#     "scipy==1.13.1",
+#     "scipy==1.14",
 #     "scipy-stubs>=1.15.3.0",
 #     "openpyxl",
 #     "tqdm==4.67.3",
