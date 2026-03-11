@@ -38,12 +38,13 @@ Double-click `SPx.app` (macOS) or `SPx.exe` (Windows) to start the application.
 
 ## ☁️ Cloud / Notebook
 
-Run SPx directly in Molab notebooks — no local setup required:
+Run SPx app directly in Molab notebooks — no local setup required:
 
-| Notebook | Description | Link |
-|----------|-------------|------|
-| **Processing** | Read CSV spectral files, extract features, generate statistics and plots | [![Open in molab](https://molab.marimo.io/molab-shield.svg)](https://molab.marimo.io/notebooks/nb_NtXyWUzTX2NNa6DhC2f9pG) |
-| **Unmixing** | Apply linear spectral unmixing using reference endmembers | [![Open in molab](https://molab.marimo.io/molab-shield.svg)](https://molab.marimo.io/notebooks/nb_Qh91ZokMoah6ZEZQLoeT9D) |
+| Notebook | Description | Link                                                                                                                          |
+|----------|-------------|-------------------------------------------------------------------------------------------------------------------------------|
+| **Processing** | Read CSV spectral files, extract features, generate statistics and plots | [![Open in molab](https://molab.marimo.io/molab-shield.svg)](https://molab.marimo.io/notebooks/nb_NtXyWUzTX2NNa6DhC2f9pG/app) |
+| **Unmixing** | Apply linear spectral unmixing using reference endmembers | [![Open in molab](https://molab.marimo.io/molab-shield.svg)](https://molab.marimo.io/notebooks/nb_Qh91ZokMoah6ZEZQLoeT9D/app) |
+
 
 ## 📖 Using the Application
 
