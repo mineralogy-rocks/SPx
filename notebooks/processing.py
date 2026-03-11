@@ -105,6 +105,22 @@ def _():
         "continuum_removed": ("Wavelength (nm)", "Continuum removed reflectance"),
     }
 
+    class CustomFeaturesConvexHullQuotient(FeaturesConvexHullQuotient):
+        """
+        Custom implementation of FeaturesConvexHullQuotient with additional functionality.
+        """
+        def _area(self, y):
+            from scipy.integrate import trapezoid
+            # Before the integration:
+            # flip the crs curve to x axis
+            # and start at y=0
+            yy = [abs(p - 1) for p in y]
+            deltax = self.wvl[1] - self.wvl[0]
+            area = trapezoid(yy, dx=deltax)
+            return area
+
+
+
     class Settings:
         def __init__(self):
             self.INPUT_PATH = Path()
@@ -244,7 +260,7 @@ def _():
             spectrum = pixel.tolist()
             wvl_list = wvl.tolist()
             try:
-                spectra_features = FeaturesConvexHullQuotient(spectrum=spectrum, wvl=wvl_list, baseline=0.99)
+                spectra_features = CustomFeaturesConvexHullQuotient(spectrum=spectrum, wvl=wvl_list, baseline=0.99)
                 spectra_features.plot(path=_plots_path, plot_name=key, feature="all")
             except Exception as e:
                 _logger.error(f"Error extracting features for {key}: {str(e)}")
@@ -258,7 +274,7 @@ def _():
                 wvl = value["Wvl"]
                 spectrum = pixel.tolist()
                 wvl_list = wvl.tolist()
-                spectra_features = FeaturesConvexHullQuotient(spectrum=spectrum, wvl=wvl_list, baseline=0.99)
+                spectra_features = CustomFeaturesConvexHullQuotient(spectrum=spectrum, wvl=wvl_list, baseline=0.99)
                 b = spectra_features.features_all
                 b_stats = pd.DataFrame(b)
                 is_keep = b_stats["state"] == "keep"
