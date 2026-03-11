@@ -54,8 +54,8 @@ class Settings:
 		if not self.INPUT_PATH.exists():
 			raise ValueError(f"INPUT_PATH not found: {self.INPUT_PATH}")
 
-		if not self.INPUT_PATH.iterdir().__next__():
-			raise ValueError(f"INPUT_PATH is empty: {self.INPUT_PATH}")
+		if not any(self.INPUT_PATH.iterdir()):
+			logger.warning(f"INPUT_PATH is empty: {self.INPUT_PATH}")
 
 		self.OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 		(self.OUTPUT_PATH / "data").mkdir(parents=True, exist_ok=True)
