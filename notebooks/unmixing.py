@@ -1,10 +1,12 @@
 # /// script
 # requires-python = ">=3.10"
 # dependencies = [
-#     "SPx @ git+https://github.com/mineralogy-rocks/SPx.git",
+#     "pysptools>=0.15.0",
 #     "pandas==3.0.1",
 #     "matplotlib",
+#     "scipy>=1.13.1,<1.14",
 #     "openpyxl",
+#     "tqdm",
 #     "marimo",
 # ]
 # ///
@@ -20,24 +22,6 @@ def _():
     import marimo as mo
 
     return (mo,)
-
-
-@app.cell
-def _(mo):
-    import subprocess as _subprocess
-    import sys as _sys
-
-    try:
-        import src as _src_check
-    except ImportError:
-        with mo.status.spinner("Installing SPx..."):
-            _subprocess.check_call([
-                _sys.executable, "-m", "pip", "install",
-                "SPx @ git+https://github.com/mineralogy-rocks/SPx.git",
-            ])
-        import importlib as _importlib
-        _importlib.invalidate_caches()
-    return ()
 
 
 @app.cell(hide_code=True)
@@ -91,11 +75,110 @@ def _():
     import logging
     import os
     import tempfile
+    from pathlib import Path
 
-    from src.base.predict import run_prediction
-    from src.config import settings
+    import numpy as np
+    import pandas as pd
+    from scipy.optimize import minimize_scalar
+    from tqdm import tqdm
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    _logger = logging.getLogger(__name__)
+
+    class Settings:
+        def __init__(self):
+            self.INPUT_PATH = Path()
+            self.OUTPUT_PATH = Path()
+
+        def configure(self, project_directory, input_folder="input", output_folder="output"):
+            project_dir = Path(project_directory).expanduser().resolve()
+            self.INPUT_PATH = project_dir / input_folder
+            self.OUTPUT_PATH = project_dir / output_folder
+
+        def _validate(self):
+            pass
+
+    settings = Settings()
+
+    def _calculate_ssr(a1, data, endmembers_df):
+        a1 = np.clip(a1, 0, 1)
+        a2 = 1.0 - a1
+
+        endmember1_params = endmembers_df.iloc[0, 1:]
+        endmember2_params = endmembers_df.iloc[1, 1:]
+        data_params = data.iloc[1:]
+
+        predicted_params = endmember1_params * a1 + endmember2_params * a2
+
+        epsilon = 1e-9
+        denominator = (data_params + predicted_params) / 2
+        residuals = np.where(np.abs(denominator) > epsilon, (predicted_params - data_params) / denominator, 0)
+        squared_residuals = np.square(residuals)
+
+        return np.sum(squared_residuals)
+
+    def _find_optimal_mixture(data, endmembers_df):
+        result = minimize_scalar(
+            _calculate_ssr,
+            bounds=(0, 1),
+            args=(data, endmembers_df),
+            method="bounded",
+        )
+
+        a1_optimal = result.x
+        a2_optimal = 1.0 - a1_optimal
+        min_ssr = result.fun
+
+        endmember1_params = endmembers_df.iloc[0, 1:]
+        endmember2_params = endmembers_df.iloc[1, 1:]
+        predicted_params = endmember1_params * a1_optimal + endmember2_params * a2_optimal
+        predicted_mixture = predicted_params.to_dict()
+
+        return a1_optimal, a2_optimal, min_ssr, predicted_mixture
+
+    def run_prediction(endmembers_path=None):
+        _logger.info("Starting endmember prediction processing")
+
+        path = Path(endmembers_path) if endmembers_path else None
+        _endmembers = pd.read_excel(path)
+        if len(_endmembers) > 2:
+            raise ValueError(f"Too many endmembers in the file. Should be only 2, got {len(_endmembers)}.")
+
+        _path = settings.OUTPUT_PATH / "data" / "results.xlsx"
+
+        if len(pd.ExcelFile(_path).sheet_names) < 2:
+            raise ValueError(f"File {_path} doesn't have a second sheet necessary for calculations.")
+
+        _df = pd.read_excel(_path, sheet_name=1)
+
+        if len(_df.columns[1:]) != len(_endmembers.columns[1:]):
+            raise ValueError(
+                f"Number of parameters in {_path} doesn't match the number of parameters in the endmembers."
+            )
+
+        results = []
+        for index, row in tqdm(_df.iterrows(), desc="Processing rows", unit="row", total=len(_df)):
+            try:
+                a1, a2, ssr, mixture = _find_optimal_mixture(row, _endmembers)
+                row_id = row.iloc[0]
+
+                _loc_results = {
+                    "id": row_id,
+                    "a1": a1,
+                    "a2": a2,
+                    "ssr": ssr,
+                    **{f"{k}": v for k, v in mixture.items()},
+                }
+                results.append(_loc_results)
+
+            except Exception as e:
+                _logger.error(f"Failed to process row {index}. Error: {e}", exc_info=True)
+
+        results = pd.DataFrame(results)
+        results.to_excel(settings.OUTPUT_PATH / "data" / "results_predicted.xlsx", index=False)
+
+        _logger.info("Prediction completed successfully")
+
     return logging, os, run_prediction, settings, tempfile
 
 
@@ -110,10 +193,7 @@ def _(os, settings, tempfile):
     os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(os.path.join(OUTPUT_DIR, "plots"), exist_ok=True)
 
-    _original_validate = settings._validate
-    settings._validate = lambda: None
     settings.configure(_tmpdir, "input", "output")
-    settings._validate = _original_validate
     return DATA_DIR, INPUT_DIR, OUTPUT_DIR
 
 
