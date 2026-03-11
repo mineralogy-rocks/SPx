@@ -1,10 +1,11 @@
 # /// script
-# requires-python = "==3.10.*"
+# requires-python = ">=3.10"
 # dependencies = [
-#     "pysptools==0.15.0",
-#     "pandas==3.0.1",
+#     "pysptools>=0.15.0",
+#     "pandas>=2.3.0",
 #     "matplotlib==3.10.8",
-#     "scipy>=1.13.1,<1.14",
+#     "scipy==1.13.1",
+#     "scipy-stubs>=1.15.3.0",
 #     "openpyxl",
 #     "tqdm==4.67.3",
 #     "marimo",
