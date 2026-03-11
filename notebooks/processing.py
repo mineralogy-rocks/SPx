@@ -45,8 +45,6 @@ def _(mo):
     2. **Process spectra** — plot original spectra, extract convex hull quotient features, generate statistics (FW, FWHM, asymmetry, depth), export to `results.xlsx`
     3. **Continuum removal** — export continuum-removed spectra as text files with plots
 
-    [![Open in Marimo](https://marimo.io/shield.svg)](https://marimo.io/p/@mineralogy-rocks/spx-processing)
-
     ---
 
     ### Preparing Your Data

@@ -39,8 +39,6 @@ def _(mo):
     This notebook runs the **unmixing** stage: apply linear spectral unmixing using reference
     endmembers to find optimal mixture coefficients via bounded minimization (SciPy).
 
-    [![Open in Marimo](https://marimo.io/shield.svg)](https://marimo.io/p/@mineralogy-rocks/spx-unmixing)
-
     ---
 
     ### Prerequisites
