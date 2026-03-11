@@ -22,6 +22,24 @@ def _():
     return (mo,)
 
 
+@app.cell
+def _(mo):
+    import subprocess as _subprocess
+    import sys as _sys
+
+    try:
+        import src as _src_check
+    except ImportError:
+        with mo.status.spinner("Installing SPx..."):
+            _subprocess.check_call([
+                _sys.executable, "-m", "pip", "install",
+                "SPx @ git+https://github.com/mineralogy-rocks/SPx.git",
+            ])
+        import importlib as _importlib
+        _importlib.invalidate_caches()
+    return ()
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
