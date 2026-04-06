@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
-import os
 import argparse
 import logging
+import os
 import shutil
 
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
+from pysptools.spectro import FeaturesConvexHullQuotient
+from pysptools.spectro import SpectrumConvexHullQuotient
 from tqdm import tqdm
-
-from pysptools.spectro import FeaturesConvexHullQuotient, SpectrumConvexHullQuotient
 
 from src import choices
 from src.config import settings
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Create function to save the spectra
 def _save_fig(fig_id, tight_layout=True, fig_extension="png", resolution=300):
-    path = os.path.join(settings.OUTPUT_PATH / 'plots', fig_id + "." + fig_extension)
+    path = os.path.join(settings.OUTPUT_PATH / "plots", fig_id + "." + fig_extension)
     if tight_layout:
         plt.tight_layout()
     plt.savefig(path, format=fig_extension, dpi=resolution)
@@ -34,13 +34,14 @@ def process_spectra(show_plots=True, axis_labels=None):
     """
     if axis_labels is None:
         axis_labels = choices.AXIS_LABELS
-    _data_path = settings.OUTPUT_PATH / 'data'
-    _plots_path = settings.OUTPUT_PATH / 'plots'
+    _data_path = settings.OUTPUT_PATH / "data"
+    _plots_path = settings.OUTPUT_PATH / "plots"
 
     os.makedirs(_plots_path, exist_ok=True)
 
-    spectra_paths = [os.path.join(_data_path, f) for f in os.listdir(_data_path)
-                    if os.path.isfile(os.path.join(_data_path, f))]
+    spectra_paths = [
+        os.path.join(_data_path, f) for f in os.listdir(_data_path) if os.path.isfile(os.path.join(_data_path, f))
+    ]
     spectra_paths.sort()
 
     if not spectra_paths:
@@ -55,7 +56,7 @@ def process_spectra(show_plots=True, axis_labels=None):
 
     for i in tqdm(range(len(names)), desc="Reading spectra files", unit="file"):
         try:
-            spectra[names[i]] = pd.read_table(spectra_paths[i], sep='\t', names = ('Wvl', 'Reflect. %'), skiprows=1)
+            spectra[names[i]] = pd.read_table(spectra_paths[i], sep="\t", names=("Wvl", "Reflect. %"), skiprows=1)
         except Exception as e:
             logger.error(f"Error reading file {spectra_paths[i]}: {str(e)}")
             continue
@@ -63,10 +64,10 @@ def process_spectra(show_plots=True, axis_labels=None):
     for key, value in tqdm(spectra.items(), desc="Plotting original spectra", unit="plot"):
         plt.figure()
         ax = plt.gca()
-        spectra[key].plot(kind='line',x='Wvl',y='Reflect. %',ax=ax)
-        plt.xlabel(axis_labels['original'][0], fontsize=14)
+        spectra[key].plot(kind="line", x="Wvl", y="Reflect. %", ax=ax)
+        plt.xlabel(axis_labels["original"][0], fontsize=14)
         plt.xticks(size=14)
-        plt.ylabel(axis_labels['original'][1], fontsize=14)
+        plt.ylabel(axis_labels["original"][1], fontsize=14)
         plt.yticks(size=14)
         plt.title(key, fontsize=16, pad=10)
         ax.get_legend().remove()
@@ -77,28 +78,30 @@ def process_spectra(show_plots=True, axis_labels=None):
             plt.pause(1)
         plt.close()
 
-    params = {'legend.fontsize': 'xx-large',
-            'lines.linewidth': 3,
-            'lines.markersize': 13,
-            'figure.figsize': (14,11),
-            'figure.dpi':300,
-            'figure.titlesize': 'xx-large',
-            'axes.labelsize': 'xx-large',
-            'axes.titlesize':'xx-large',
-            'axes.labelpad':15,
-            'axes.titlepad':15,
-            'xtick.labelsize':'x-large',
-            'ytick.labelsize':'x-large'}
+    params = {
+        "legend.fontsize": "xx-large",
+        "lines.linewidth": 3,
+        "lines.markersize": 13,
+        "figure.figsize": (14, 11),
+        "figure.dpi": 300,
+        "figure.titlesize": "xx-large",
+        "axes.labelsize": "xx-large",
+        "axes.titlesize": "xx-large",
+        "axes.labelpad": 15,
+        "axes.titlepad": 15,
+        "xtick.labelsize": "x-large",
+        "ytick.labelsize": "x-large",
+    }
     plt.rcParams.update(params)
 
     for key, value in tqdm(spectra.items(), desc="Extracting features", unit="spectrum"):
-        pixel = value['Reflect. %']
-        wvl = value['Wvl']
+        pixel = value["Reflect. %"]
+        wvl = value["Wvl"]
         spectrum = pixel.tolist()
         wvl_list = wvl.tolist()
         try:
             spectra_features = FeaturesConvexHullQuotient(spectrum=spectrum, wvl=wvl_list, baseline=0.99)
-            spectra_features.plot(path=_plots_path, plot_name=key, feature='all')
+            spectra_features.plot(path=_plots_path, plot_name=key, feature="all")
         except Exception as e:
             logger.error(f"Error extracting features for {key}: {str(e)}")
 
@@ -106,22 +109,22 @@ def process_spectra(show_plots=True, axis_labels=None):
 
     for key, value in tqdm(spectra.items(), desc="Generating statistics", unit="spectrum"):
         try:
-            pixel = value['Reflect. %']
-            pixel = pixel/100
-            wvl = value['Wvl']
+            pixel = value["Reflect. %"]
+            pixel = pixel / 100
+            wvl = value["Wvl"]
             spectrum = pixel.tolist()
             wvl_list = wvl.tolist()
             spectra_features = FeaturesConvexHullQuotient(spectrum=spectrum, wvl=wvl_list, baseline=0.99)
             b = spectra_features.features_all
             b_stats = pd.DataFrame(b)
-            is_keep = b_stats['state'] == 'keep'
+            is_keep = b_stats["state"] == "keep"
             b_stats_keep = b_stats[is_keep]
-            csv_path = os.path.join(_data_path, key + '.csv')
-            b_stats_keep.to_csv(csv_path, sep=',', index=False)
+            csv_path = os.path.join(_data_path, key + ".csv")
+            b_stats_keep.to_csv(csv_path, sep=",", index=False)
 
             _data = b_stats_keep.loc[:]
-            _data['filename'] = key
-            _data['peak'] = key.split('-peak-')[-1]
+            _data["filename"] = key
+            _data["peak"] = key.split("-peak-")[-1]
             _data["hx_1"] = _data["hx"].apply(lambda x: x[0] if x is not None else None)
             _data["hx_2"] = _data["hx"].apply(lambda x: x[1] if x is not None else None)
             _data["hy_1"] = _data["hy"].apply(lambda x: x[0] if x is not None else None)
@@ -130,20 +133,20 @@ def process_spectra(show_plots=True, axis_labels=None):
             _data["FWHM_x_2"] = _data["FWHM_x"].apply(lambda x: x[1] if x is not None else None)
             _data["FWHM_y"] = _data["FWHM_y"].apply(lambda x: x[0] if x is not None else None)
 
-            _data['FW'] = _data['cstop_wvl'] - _data['cstart_wvl']
-            _data['FW_left_width'] = _data['abs_wvl'] - _data['cstart_wvl']
-            _data['FW_right_width'] = _data['cstop_wvl'] - _data['abs_wvl']
-            _data['FW_assymetry'] = _data['FW_left_width'] / _data['FW_right_width']
+            _data["FW"] = _data["cstop_wvl"] - _data["cstart_wvl"]
+            _data["FW_left_width"] = _data["abs_wvl"] - _data["cstart_wvl"]
+            _data["FW_right_width"] = _data["cstop_wvl"] - _data["abs_wvl"]
+            _data["FW_assymetry"] = _data["FW_left_width"] / _data["FW_right_width"]
 
-            _data['FWHM_left_width'] = _data['abs_wvl'] - _data['FWHM_x_1']
-            _data['FWHM_right_width'] = _data['FWHM_x_2'] - _data['abs_wvl']
-            _data['FWHM_assymetry'] = _data['FWHM_left_width'] / _data['FWHM_right_width']
+            _data["FWHM_left_width"] = _data["abs_wvl"] - _data["FWHM_x_1"]
+            _data["FWHM_right_width"] = _data["FWHM_x_2"] - _data["abs_wvl"]
+            _data["FWHM_assymetry"] = _data["FWHM_left_width"] / _data["FWHM_right_width"]
 
-            _data['D'] = 1 - _data['abs_depth']
-            _data['E'] = _data['FW'] / _data['D']
-            _data['E*'] = _data['FWHM_delta'] / _data['D']
+            _data["D"] = 1 - _data["abs_depth"]
+            _data["E"] = _data["FW"] / _data["D"]
+            _data["E*"] = _data["FWHM_delta"] / _data["D"]
 
-            _data.drop(columns=['seq', 'id', 'state', 'spectrum', 'wvl', 'crs', 'hx', 'hy', 'FWHM_x'], inplace=True)
+            _data.drop(columns=["seq", "id", "state", "spectrum", "wvl", "crs", "hx", "hy", "FWHM_x"], inplace=True)
             _full_data = pd.concat([_full_data, _data], axis=0)
         except Exception as e:
             logger.error(f"Error generating statistics for {key}: {str(e)}")
@@ -151,35 +154,35 @@ def process_spectra(show_plots=True, axis_labels=None):
     # TODO: place further calculations here
 
     cols = _full_data.columns.tolist()
-    cols.insert(0, cols.pop(cols.index('peak')))
-    cols.insert(1, cols.pop(cols.index('filename')))
+    cols.insert(0, cols.pop(cols.index("peak")))
+    cols.insert(1, cols.pop(cols.index("filename")))
     _full_data = _full_data[cols]
-    _full_data.to_excel(os.path.join(_data_path, 'results.xlsx'), index=False)
+    _full_data.to_excel(os.path.join(_data_path, "results.xlsx"), index=False)
 
     plt.rcParams.update(plt.rcParamsDefault)
     for key, value in tqdm(spectra.items(), desc="Exporting continuum removed spectra", unit="spectrum"):
         try:
-            pixel = value['Reflect. %']
-            pixel = pixel/100
-            wvl = value['Wvl']
+            pixel = value["Reflect. %"]
+            pixel = pixel / 100
+            wvl = value["Wvl"]
             spectrum = pixel.tolist()
             wvl_list = wvl.tolist()
             spectra_remov = SpectrumConvexHullQuotient(spectrum=spectrum, wvl=wvl_list)
             conti_rem = spectra_remov.get_continuum_removed_spectrum()
-            cont_corr = pd.DataFrame({'Reflectance':conti_rem})
-            cont_corr.insert(0, 'Wvl', wvl)
-            cont_corr['Wvl']=wvl
-            txt_path = os.path.join(_data_path, key + '_continuum_corr_spectra.txt')
-            cont_corr.to_csv(txt_path, sep='\t', index=False, header=False)
+            cont_corr = pd.DataFrame({"Reflectance": conti_rem})
+            cont_corr.insert(0, "Wvl", wvl)
+            cont_corr["Wvl"] = wvl
+            txt_path = os.path.join(_data_path, key + "_continuum_corr_spectra.txt")
+            cont_corr.to_csv(txt_path, sep="\t", index=False, header=False)
 
             plt.figure()
             ax = plt.gca()
-            cont_corr.plot(kind='line',color='g', x='Wvl',y='Reflectance', ax=ax)
-            plt.xlabel(axis_labels['continuum_removed'][0], fontsize=14)
+            cont_corr.plot(kind="line", color="g", x="Wvl", y="Reflectance", ax=ax)
+            plt.xlabel(axis_labels["continuum_removed"][0], fontsize=14)
             plt.xticks(size=14)
-            plt.ylabel(axis_labels['continuum_removed'][1], fontsize=14)
+            plt.ylabel(axis_labels["continuum_removed"][1], fontsize=14)
             plt.yticks(size=14)
-            plt.title(key,fontsize=16, pad=10)
+            plt.title(key, fontsize=16, pad=10)
             ax.get_legend().remove()
             if show_plots:
                 plt.show()
@@ -204,24 +207,27 @@ def _get_files(path):
 def generate_spectra(thresholds=None):
     if thresholds is None:
         from src.choices import THRESHOLDS
+
         thresholds = THRESHOLDS
 
     _path = settings.INPUT_PATH
-    _filenames = [f for f in _get_files(_path) if f.endswith('.csv') or f.endswith('.CSV')]
+    _filenames = [f for f in _get_files(_path) if f.endswith(".csv") or f.endswith(".CSV")]
 
     for _filename in tqdm(_filenames, desc="Generating spectra", unit="file"):
         _df = pd.read_csv(os.path.join(_path, _filename))
-        _df = _df.rename(columns={_df.columns[0]: 'wavelength', _df.columns[1]: 'reflectance'})
-        _df = _df[['wavelength', 'reflectance']]
-        _df = _df.apply(pd.to_numeric, errors='coerce')
+        _df = _df.rename(columns={_df.columns[0]: "wavelength", _df.columns[1]: "reflectance"})
+        _df = _df[["wavelength", "reflectance"]]
+        _df = _df.apply(pd.to_numeric, errors="coerce")
         _df = _df.dropna()
 
         for _threshold, _limits in thresholds:
-            _peak_filename = f'{_filename.split(".")[0]}-{_threshold}'
-            _df_peak = _df.loc[(_df['wavelength'] >= _limits[0]) & (_df['wavelength'] <= _limits[1])]
+            _peak_filename = f"{_filename.split('.')[0]}-{_threshold}"
+            _df_peak = _df.loc[(_df["wavelength"] >= _limits[0]) & (_df["wavelength"] <= _limits[1])]
             _df_peak = _df_peak.reset_index(drop=True)
-            _df_peak.rename(columns={'wavelength': 'Wavelength', 'reflectance': _peak_filename}, inplace=True)
-            _df_peak.to_csv(os.path.join(settings.OUTPUT_PATH, 'data', f'{_peak_filename}.txt'), sep='\t', index=False, header=True)
+            _df_peak.rename(columns={"wavelength": "Wavelength", "reflectance": _peak_filename}, inplace=True)
+            _df_peak.to_csv(
+                os.path.join(settings.OUTPUT_PATH, "data", f"{_peak_filename}.txt"), sep="\t", index=False, header=True
+            )
 
 
 def _cleanup(path):
@@ -241,8 +247,8 @@ def _cleanup(path):
 
 def run_pipeline(show_plots=True, thresholds=None, axis_labels=None):
     logger.info("Starting NIR spectra processing")
-    _cleanup(settings.OUTPUT_PATH / 'data')
-    _cleanup(settings.OUTPUT_PATH / 'plots')
+    _cleanup(settings.OUTPUT_PATH / "data")
+    _cleanup(settings.OUTPUT_PATH / "plots")
     generate_spectra(thresholds=thresholds)
     process_spectra(show_plots=show_plots, axis_labels=axis_labels)
     logger.info("Processing completed successfully")
@@ -251,15 +257,15 @@ def run_pipeline(show_plots=True, thresholds=None, axis_labels=None):
 def main():
     import coloredlogs
 
-    parser = argparse.ArgumentParser(description='Process NIR spectra files.')
-    parser.add_argument('--no-plots', action='store_true', help='Do not show plots during processing')
+    parser = argparse.ArgumentParser(description="Process NIR spectra files.")
+    parser.add_argument("--no-plots", action="store_true", help="Do not show plots during processing")
 
     args = parser.parse_args()
 
     if not settings.is_configured:
         settings.configure_from_env()
 
-    coloredlogs.install(level='INFO', fmt='%(asctime)s %(levelname)s %(message)s')
+    coloredlogs.install(level="INFO", fmt="%(asctime)s %(levelname)s %(message)s")
 
     try:
         run_pipeline(show_plots=not args.no_plots)
