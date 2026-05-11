@@ -1,15 +1,16 @@
 # -*- coding: UTF-8 -*-
 import logging
 from pathlib import Path
-from typing import Tuple, Dict, Any
+from typing import Any
+from typing import Dict
+from typing import Tuple
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from scipy.optimize import minimize_scalar
 from tqdm import tqdm
 
 from src.config import settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -71,12 +72,7 @@ def _find_optimal_mixture(data: pd.Series, endmembers_df: pd.DataFrame) -> Tuple
         - predicted_mixture (dict): A dictionary of the predicted parameter values.
     """
     # We use a bounded optimization method as a1 must be between 0 and 1.
-    result = minimize_scalar(
-        _calculate_ssr,
-        bounds=(0, 1),
-        args=(data, endmembers_df),
-        method="bounded"
-    )
+    result = minimize_scalar(_calculate_ssr, bounds=(0, 1), args=(data, endmembers_df), method="bounded")
 
     a1_optimal = result.x
     a2_optimal = 1.0 - a1_optimal
@@ -107,9 +103,7 @@ def run_prediction(endmembers_path=None):
     _df = pd.read_excel(_path, sheet_name=1)
 
     if len(_df.columns[1:]) != len(_endmembers.columns[1:]):
-        raise ValueError(
-            f"Number of parameters in {_path} doesn't match the number of parameters in the endmembers."
-        )
+        raise ValueError(f"Number of parameters in {_path} doesn't match the number of parameters in the endmembers.")
 
     results = []
     for index, row in tqdm(_df.iterrows(), desc="Processing rows", unit="row", total=len(_df)):
@@ -141,7 +135,7 @@ def main():
     if not settings.is_configured:
         settings.configure_from_env()
 
-    coloredlogs.install(level='INFO', fmt='%(asctime)s %(levelname)s %(message)s')
+    coloredlogs.install(level="INFO", fmt="%(asctime)s %(levelname)s %(message)s")
 
     try:
         run_prediction()
