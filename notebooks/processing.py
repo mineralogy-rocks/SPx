@@ -85,7 +85,8 @@ def _():
     import matplotlib
     import matplotlib.pyplot as plt
     import pandas as pd
-    from pysptools.spectro import FeaturesConvexHullQuotient, SpectrumConvexHullQuotient
+    from pysptools.spectro import FeaturesConvexHullQuotient
+    from pysptools.spectro import SpectrumConvexHullQuotient
     from tqdm import tqdm
 
     matplotlib.use("agg")
@@ -107,8 +108,10 @@ def _():
         """
         Custom implementation of FeaturesConvexHullQuotient with additional functionality.
         """
+
         def _area(self, y):
             from scipy.integrate import trapezoid
+
             # Before the integration:
             # flip the crs curve to x axis
             # and start at y=0
@@ -116,8 +119,6 @@ def _():
             deltax = self.wvl[1] - self.wvl[0]
             area = trapezoid(yy, dx=deltax)
             return area
-
-
 
     class Settings:
         def __init__(self):
@@ -176,7 +177,7 @@ def _():
             _df = _df.dropna()
 
             for _threshold, _limits in thresholds:
-                _peak_filename = f'{_filename.split(".")[0]}-{_threshold}'
+                _peak_filename = f"{_filename.split('.')[0]}-{_threshold}"
                 _df_peak = _df.loc[(_df["wavelength"] >= _limits[0]) & (_df["wavelength"] <= _limits[1])]
                 _df_peak = _df_peak.reset_index(drop=True)
                 _df_peak.rename(columns={"wavelength": "Wavelength", "reflectance": _peak_filename}, inplace=True)
@@ -196,9 +197,7 @@ def _():
         os.makedirs(_plots_path, exist_ok=True)
 
         spectra_paths = [
-            os.path.join(_data_path, f)
-            for f in os.listdir(_data_path)
-            if os.path.isfile(os.path.join(_data_path, f))
+            os.path.join(_data_path, f) for f in os.listdir(_data_path) if os.path.isfile(os.path.join(_data_path, f))
         ]
         spectra_paths.sort()
 
@@ -304,9 +303,7 @@ def _():
                 _data["E"] = _data["FW"] / _data["D"]
                 _data["E*"] = _data["FWHM_delta"] / _data["D"]
 
-                _data.drop(
-                    columns=["seq", "id", "state", "spectrum", "wvl", "crs", "hx", "hy", "FWHM_x"], inplace=True
-                )
+                _data.drop(columns=["seq", "id", "state", "spectrum", "wvl", "crs", "hx", "hy", "FWHM_x"], inplace=True)
                 _full_data = pd.concat([_full_data, _data], axis=0)
             except Exception as e:
                 _logger.error(f"Error generating statistics for {key}: {str(e)}")
@@ -441,11 +438,13 @@ def _(mo):
     peak3_min = mo.ui.number(start=1000, stop=10000, value=4310, step=1, label="peak-3 min (nm)")
     peak3_max = mo.ui.number(start=1000, stop=10000, value=4788, step=1, label="peak-3 max (nm)")
 
-    mo.vstack([
-        mo.hstack([peak1_min, peak1_max], justify="start"),
-        mo.hstack([peak2_min, peak2_max], justify="start"),
-        mo.hstack([peak3_min, peak3_max], justify="start"),
-    ])
+    mo.vstack(
+        [
+            mo.hstack([peak1_min, peak1_max], justify="start"),
+            mo.hstack([peak2_min, peak2_max], justify="start"),
+            mo.hstack([peak3_min, peak3_max], justify="start"),
+        ]
+    )
     return peak1_max, peak1_min, peak2_max, peak2_min, peak3_max, peak3_min
 
 
@@ -476,10 +475,14 @@ def _(mo):
     cr_x = mo.ui.text(value="Wavelength (nm)", full_width=True)
     cr_y = mo.ui.text(value="Continuum removed reflectance", full_width=True)
 
-    mo.hstack([
-        mo.vstack([mo.md("**Original — X axis**"), orig_x, mo.md("**Original — Y axis**"), orig_y]),
-        mo.vstack([mo.md("**Continuum removed — X axis**"), cr_x, mo.md("**Continuum removed — Y axis**"), cr_y]),
-    ], justify="start", gap=2)
+    mo.hstack(
+        [
+            mo.vstack([mo.md("**Original — X axis**"), orig_x, mo.md("**Original — Y axis**"), orig_y]),
+            mo.vstack([mo.md("**Continuum removed — X axis**"), cr_x, mo.md("**Continuum removed — Y axis**"), cr_y]),
+        ],
+        justify="start",
+        gap=2,
+    )
     return cr_x, cr_y, orig_x, orig_y
 
 
@@ -556,7 +559,9 @@ def _(mo, output_path, pipeline_done):
             if _f.is_file():
                 _zf.write(_f, _f.relative_to(output_path))
     _zip_buf.seek(0)
-    _elements.append(mo.download(data=_zip_buf.getvalue(), filename="spx_results.zip", label="Download all results (.zip)"))
+    _elements.append(
+        mo.download(data=_zip_buf.getvalue(), filename="spx_results.zip", label="Download all results (.zip)")
+    )
 
     # Results table
     if _results_path.exists():
@@ -571,19 +576,23 @@ def _(mo, output_path, pipeline_done):
         if _dir.exists():
             for _f in sorted(_dir.iterdir()):
                 if _f.is_file():
-                    _all_files.append({
-                        "folder": _subdir,
-                        "file": _f.name,
-                        "size": f"{_f.stat().st_size / 1024:.1f} KB",
-                        "download": mo.download(data=_f.read_bytes(), filename=_f.name, label="Download"),
-                    })
+                    _all_files.append(
+                        {
+                            "folder": _subdir,
+                            "file": _f.name,
+                            "size": f"{_f.stat().st_size / 1024:.1f} KB",
+                            "download": mo.download(data=_f.read_bytes(), filename=_f.name, label="Download"),
+                        }
+                    )
 
     if _all_files:
         _elements.append(mo.md("### All Output Files"))
-        _elements.append(mo.ui.table(
-            _all_files,
-            selection=None,
-        ))
+        _elements.append(
+            mo.ui.table(
+                _all_files,
+                selection=None,
+            )
+        )
 
     # Plots grid (3 per row)
     if _plots_dir.exists():
@@ -592,10 +601,14 @@ def _(mo, output_path, pipeline_done):
             _elements.append(mo.md("### Plots"))
             _row = []
             for _i, _p in enumerate(_plot_files):
-                _row.append(mo.vstack([
-                    mo.md(f"**{_p.stem}**"),
-                    mo.image(src=_p, width=300),
-                ]))
+                _row.append(
+                    mo.vstack(
+                        [
+                            mo.md(f"**{_p.stem}**"),
+                            mo.image(src=_p, width=300),
+                        ]
+                    )
+                )
                 if len(_row) == 3:
                     _elements.append(mo.hstack(_row, justify="start", gap=1))
                     _row = []
