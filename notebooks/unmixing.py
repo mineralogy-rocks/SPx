@@ -316,7 +316,9 @@ def _(mo, output_path, prediction_done):
             if _f.is_file():
                 _zf.write(_f, _f.relative_to(output_path))
     _zip_buf.seek(0)
-    _elements.append(mo.download(data=_zip_buf.getvalue(), filename="spx_unmixing_results.zip", label="Download all results (.zip)"))
+    _elements.append(
+        mo.download(data=_zip_buf.getvalue(), filename="spx_unmixing_results.zip", label="Download all results (.zip)")
+    )
 
     # Results table
     if _predicted_path.exists():
@@ -329,11 +331,13 @@ def _(mo, output_path, prediction_done):
     if _data_dir.exists():
         for _f in sorted(_data_dir.iterdir()):
             if _f.is_file():
-                _all_files.append({
-                    "file": _f.name,
-                    "size": f"{_f.stat().st_size / 1024:.1f} KB",
-                    "download": mo.download(data=_f.read_bytes(), filename=_f.name, label="Download"),
-                })
+                _all_files.append(
+                    {
+                        "file": _f.name,
+                        "size": f"{_f.stat().st_size / 1024:.1f} KB",
+                        "download": mo.download(data=_f.read_bytes(), filename=_f.name, label="Download"),
+                    }
+                )
 
     if _all_files:
         _elements.append(mo.md("### All Output Files"))
