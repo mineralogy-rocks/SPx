@@ -24,6 +24,21 @@ def _save_fig(fig_id, tight_layout=True, fig_extension="png", resolution=300):
     plt.savefig(path, format=fig_extension, dpi=resolution)
 
 
+def _plot_features(features, name, axis_labels):
+    for feat in features:
+        plt.figure()
+        plt.plot(feat['wvl'], feat['crs'], 'g', label='crs')
+        plt.plot((feat['abs_wvl'], feat['abs_wvl']), (feat['abs_depth'], 1), 'r', label='depth')
+        plt.plot(feat['FWHM_x'], feat['FWHM_y'], 'b', label='FWHM')
+        plt.xlabel(axis_labels['continuum_removed'][0])
+        plt.ylabel(axis_labels['continuum_removed'][1])
+        plt.title(f"{name} Hull Quotient, feature {feat['id']}")
+        plt.grid(True)
+        plt.legend(framealpha=0.5)
+        _save_fig(f"{name}_feature {feat['id']}")
+        plt.close()
+
+
 def process_spectra(show_plots=True, axis_labels=None):
     """
     Process spectral data files.
@@ -98,7 +113,7 @@ def process_spectra(show_plots=True, axis_labels=None):
         wvl_list = wvl.tolist()
         try:
             spectra_features = FeaturesConvexHullQuotient(spectrum=spectrum, wvl=wvl_list, baseline=0.99)
-            spectra_features.plot(path=_plots_path, plot_name=key, feature='all')
+            _plot_features(spectra_features.features, key, axis_labels)
         except Exception as e:
             logger.error(f"Error extracting features for {key}: {str(e)}")
 
@@ -121,7 +136,7 @@ def process_spectra(show_plots=True, axis_labels=None):
 
             _data = b_stats_keep.loc[:]
             _data['filename'] = key
-            _data['peak'] = key.split('-peak-')[-1]
+            _data['band'] = key.split('-band-')[-1]
             _data["hx_1"] = _data["hx"].apply(lambda x: x[0] if x is not None else None)
             _data["hx_2"] = _data["hx"].apply(lambda x: x[1] if x is not None else None)
             _data["hy_1"] = _data["hy"].apply(lambda x: x[0] if x is not None else None)
@@ -151,7 +166,7 @@ def process_spectra(show_plots=True, axis_labels=None):
     # TODO: place further calculations here
 
     cols = _full_data.columns.tolist()
-    cols.insert(0, cols.pop(cols.index('peak')))
+    cols.insert(0, cols.pop(cols.index('band')))
     cols.insert(1, cols.pop(cols.index('filename')))
     _full_data = _full_data[cols]
     _full_data.to_excel(os.path.join(_data_path, 'results.xlsx'), index=False)

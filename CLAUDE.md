@@ -29,7 +29,7 @@ It is a standalone project within the mineralogy-rocks ecosystem.
 - **src/base/predict.py**: Linear spectral unmixing — finds optimal endmember mixture coefficients using bounded minimization (SciPy)
 - **src/config.py**: Environment-based configuration via `Settings` class; loads `.env`, validates paths, creates output directories
 - **src/constants.py**: Project root path constant
-- **src/choices.py**: Configurable spectral peak thresholds and endmember definitions
+- **src/choices.py**: Configurable spectral band thresholds and endmember definitions
 
 ### Processing Pipeline
 1. **Generate spectra**: Read CSV files from input, filter by wavelength thresholds, export as tab-separated text files
@@ -66,5 +66,5 @@ It is a standalone project within the mineralogy-rocks ecosystem.
 
 ### Spectral Thresholds
 - Defined in `src/choices.py` as `THRESHOLDS` tuple
-- Each threshold: name string + wavelength range tuple (nm)
-- Modify these to adjust which spectral peaks are extracted
+- Each threshold: name string + wavenumber range tuple (cm⁻¹)
+- Modify these to adjust which spectral bands are extracted

@@ -56,13 +56,13 @@ def _(mo):
 
     ### Default Thresholds
 
-    Spectral peak wavelength ranges (nm) used to filter input data. You can adjust these below.
+    Spectral band (wavenumber-wavelength) ranges (cm⁻¹) used to filter input data. You can adjust these below.
 
-    | Peak | Min (nm) | Max (nm) |
+    | Band | Min (cm⁻¹) | Max (cm⁻¹) |
     |------|----------|----------|
-    | peak-1 | 5500 | 8000 |
-    | peak-2 | 4600 | 5540 |
-    | peak-3 | 4310 | 4788 |
+    | band-1 | 5500 | 8000 |
+    | band-2 | 4600 | 5540 |
+    | band-3 | 4310 | 4788 |
 
     ### Results
 
@@ -93,14 +93,14 @@ def _():
     _logger = logging.getLogger(__name__)
 
     THRESHOLDS = (
-        ("peak-1", (5500, 8000)),
-        ("peak-2", (4600, 5540)),
-        ("peak-3", (4310, 4788)),
+        ("band-1", (5500, 8000)),
+        ("band-2", (4600, 5540)),
+        ("band-3", (4310, 4788)),
     )
 
     AXIS_LABELS = {
-        "original": ("Wavelength (nm)", "Reflectance (%)"),
-        "continuum_removed": ("Wavelength (nm)", "Continuum removed reflectance"),
+        "original": ("Wavenumber (cm⁻¹)", "Reflectance (%)"),
+        "continuum_removed": ("Wavenumber (cm⁻¹)", "Continuum removed reflectance"),
     }
 
     class CustomFeaturesConvexHullQuotient(FeaturesConvexHullQuotient):
@@ -139,6 +139,20 @@ def _():
         if tight_layout:
             plt.tight_layout()
         plt.savefig(path, format=fig_extension, dpi=resolution)
+
+    def _plot_features(features, name, axis_labels):
+        for feat in features:
+            plt.figure()
+            plt.plot(feat["wvl"], feat["crs"], "g", label="crs")
+            plt.plot((feat["abs_wvl"], feat["abs_wvl"]), (feat["abs_depth"], 1), "r", label="depth")
+            plt.plot(feat["FWHM_x"], feat["FWHM_y"], "b", label="FWHM")
+            plt.xlabel(axis_labels["continuum_removed"][0])
+            plt.ylabel(axis_labels["continuum_removed"][1])
+            plt.title(f"{name} Hull Quotient, feature {feat['id']}")
+            plt.grid(True)
+            plt.legend(framealpha=0.5)
+            _save_fig(f"{name}_feature {feat['id']}")
+            plt.close()
 
     def _get_files(path):
         _files = []
@@ -259,7 +273,7 @@ def _():
             wvl_list = wvl.tolist()
             try:
                 spectra_features = CustomFeaturesConvexHullQuotient(spectrum=spectrum, wvl=wvl_list, baseline=0.99)
-                spectra_features.plot(path=_plots_path, plot_name=key, feature="all")
+                _plot_features(spectra_features.features, key, axis_labels)
             except Exception as e:
                 _logger.error(f"Error extracting features for {key}: {str(e)}")
 
@@ -282,7 +296,7 @@ def _():
 
                 _data = b_stats_keep.loc[:]
                 _data["filename"] = key
-                _data["peak"] = key.split("-peak-")[-1]
+                _data["band"] = key.split("-band-")[-1]
                 _data["hx_1"] = _data["hx"].apply(lambda x: x[0] if x is not None else None)
                 _data["hx_2"] = _data["hx"].apply(lambda x: x[1] if x is not None else None)
                 _data["hy_1"] = _data["hy"].apply(lambda x: x[0] if x is not None else None)
@@ -313,7 +327,7 @@ def _():
 
         if not _full_data.empty:
             cols = _full_data.columns.tolist()
-            cols.insert(0, cols.pop(cols.index("peak")))
+            cols.insert(0, cols.pop(cols.index("band")))
             cols.insert(1, cols.pop(cols.index("filename")))
             _full_data = _full_data[cols]
         _full_data.to_excel(os.path.join(_data_path, "results.xlsx"), index=False)
@@ -427,34 +441,34 @@ def _(mo):
     mo.md(r"""
     ## Thresholds
 
-    Adjust spectral peak wavelength ranges (nm) used to filter input data.
+    Adjust spectral band (wavenumber-wavelength) ranges (cm⁻¹) used to filter input data.
     """)
     return
 
 
 @app.cell
 def _(mo):
-    peak1_min = mo.ui.number(start=1000, stop=10000, value=5500, step=1, label="peak-1 min (nm)")
-    peak1_max = mo.ui.number(start=1000, stop=10000, value=8000, step=1, label="peak-1 max (nm)")
-    peak2_min = mo.ui.number(start=1000, stop=10000, value=4600, step=1, label="peak-2 min (nm)")
-    peak2_max = mo.ui.number(start=1000, stop=10000, value=5540, step=1, label="peak-2 max (nm)")
-    peak3_min = mo.ui.number(start=1000, stop=10000, value=4310, step=1, label="peak-3 min (nm)")
-    peak3_max = mo.ui.number(start=1000, stop=10000, value=4788, step=1, label="peak-3 max (nm)")
+    band1_min = mo.ui.number(start=1000, stop=10000, value=5500, step=1, label="band-1 min (cm⁻¹)")
+    band1_max = mo.ui.number(start=1000, stop=10000, value=8000, step=1, label="band-1 max (cm⁻¹)")
+    band2_min = mo.ui.number(start=1000, stop=10000, value=4600, step=1, label="band-2 min (cm⁻¹)")
+    band2_max = mo.ui.number(start=1000, stop=10000, value=5540, step=1, label="band-2 max (cm⁻¹)")
+    band3_min = mo.ui.number(start=1000, stop=10000, value=4310, step=1, label="band-3 min (cm⁻¹)")
+    band3_max = mo.ui.number(start=1000, stop=10000, value=4788, step=1, label="band-3 max (cm⁻¹)")
 
     mo.vstack([
-        mo.hstack([peak1_min, peak1_max], justify="start"),
-        mo.hstack([peak2_min, peak2_max], justify="start"),
-        mo.hstack([peak3_min, peak3_max], justify="start"),
+        mo.hstack([band1_min, band1_max], justify="start"),
+        mo.hstack([band2_min, band2_max], justify="start"),
+        mo.hstack([band3_min, band3_max], justify="start"),
     ])
-    return peak1_max, peak1_min, peak2_max, peak2_min, peak3_max, peak3_min
+    return band1_max, band1_min, band2_max, band2_min, band3_max, band3_min
 
 
 @app.cell
-def _(peak1_max, peak1_min, peak2_max, peak2_min, peak3_max, peak3_min):
+def _(band1_max, band1_min, band2_max, band2_min, band3_max, band3_min):
     thresholds = [
-        ("peak-1", (peak1_min.value, peak1_max.value)),
-        ("peak-2", (peak2_min.value, peak2_max.value)),
-        ("peak-3", (peak3_min.value, peak3_max.value)),
+        ("band-1", (band1_min.value, band1_max.value)),
+        ("band-2", (band2_min.value, band2_max.value)),
+        ("band-3", (band3_min.value, band3_max.value)),
     ]
     return (thresholds,)
 
@@ -471,9 +485,9 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    orig_x = mo.ui.text(value="Wavelength (nm)", full_width=True)
+    orig_x = mo.ui.text(value="Wavenumber (cm⁻¹)", full_width=True)
     orig_y = mo.ui.text(value="Reflectance (%)", full_width=True)
-    cr_x = mo.ui.text(value="Wavelength (nm)", full_width=True)
+    cr_x = mo.ui.text(value="Wavenumber (cm⁻¹)", full_width=True)
     cr_y = mo.ui.text(value="Continuum removed reflectance", full_width=True)
 
     mo.hstack([

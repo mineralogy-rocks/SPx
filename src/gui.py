@@ -336,7 +336,7 @@ class ThresholdsDialog(tk.Toplevel):
 		super().__init__(parent)
 		self.app = app
 		self.title("Edit Thresholds")
-		self.geometry("480x400")
+		self.geometry("580x400")
 		self.resizable(True, True)
 		self.grab_set()
 
@@ -353,8 +353,8 @@ class ThresholdsDialog(tk.Toplevel):
 
 		self.tree = ttk.Treeview(tree_frame, columns=("min", "max"), selectmode="browse")
 		self.tree.heading("#0", text="Name", anchor=tk.W)
-		self.tree.heading("min", text="Min (nm)", anchor=tk.E)
-		self.tree.heading("max", text="Max (nm)", anchor=tk.E)
+		self.tree.heading("min", text="Min (cm⁻¹)", anchor=tk.E)
+		self.tree.heading("max", text="Max (cm⁻¹)", anchor=tk.E)
 		self.tree.column("#0", width=160)
 		self.tree.column("min", width=90, anchor=tk.E)
 		self.tree.column("max", width=90, anchor=tk.E)
@@ -373,11 +373,11 @@ class ThresholdsDialog(tk.Toplevel):
 		self._name_var = tk.StringVar()
 		ttk.Entry(form_frame, textvariable=self._name_var, width=14).grid(row=0, column=1, padx=(0, 8))
 
-		ttk.Label(form_frame, text="Min (nm):").grid(row=0, column=2, sticky=tk.W, padx=(0, 4))
+		ttk.Label(form_frame, text="Min (cm⁻¹):").grid(row=0, column=2, sticky=tk.W, padx=(0, 4))
 		self._min_var = tk.StringVar()
 		ttk.Entry(form_frame, textvariable=self._min_var, width=8).grid(row=0, column=3, padx=(0, 8))
 
-		ttk.Label(form_frame, text="Max (nm):").grid(row=0, column=4, sticky=tk.W, padx=(0, 4))
+		ttk.Label(form_frame, text="Max (cm⁻¹):").grid(row=0, column=4, sticky=tk.W, padx=(0, 4))
 		self._max_var = tk.StringVar()
 		ttk.Entry(form_frame, textvariable=self._max_var, width=8).grid(row=0, column=5, padx=(0, 8))
 

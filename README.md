@@ -58,7 +58,7 @@ The default folder names are `input` and `output`. You can change them if your p
 
 ### Step 3: (Optional) Adjust Thresholds and Endmembers File
 
-- Click **Edit Thresholds** to change the wavelength ranges used for spectral peak extraction
+- Click **Edit Thresholds** to change the wavenumber-wavelength ranges (cm⁻¹) used for spectral band extraction
 - In the **Endmembers File** field, the default path (`data/endmembers.xlsx`) is pre-filled. Click **Browse...** to select a different `.xlsx` file
 
 ### Step 4: Run Processing
@@ -89,15 +89,15 @@ Place your spectral CSV files in the `input` folder inside your project director
 
 ### Customizing Thresholds
 
-Click **Edit Thresholds** in the main window to adjust spectral peak wavelength ranges without editing any files. Changes apply immediately to the next **Process Spectra** run.
+Click **Edit Thresholds** in the main window to adjust spectral band (wavenumber-wavelength) ranges without editing any files. Changes apply immediately to the next **Process Spectra** run.
 
 Default thresholds:
 
-| Name   | Min (nm) | Max (nm) |
-|--------|----------|----------|
-| peak-1 | 5500     | 8000     |
-| peak-2 | 4600     | 5540     |
-| peak-3 | 4310     | 4788     |
+| Name   | Min (cm⁻¹) | Max (cm⁻¹) |
+|--------|------------|------------|
+| band-1 | 5500       | 8000       |
+| band-2 | 4600       | 5540       |
+| band-3 | 4310       | 4788       |
 
 ### Endmembers
 
